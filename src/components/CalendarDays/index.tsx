@@ -39,6 +39,14 @@ function CalendarDays({ onDayChanged }: CalendarDaysProps) {
   }, []);
 
   useEffect(() => {
+    if (weeksInYear.length) {
+      setTimeout(() => {
+        onTodayPress();
+      }, 500);
+    }
+  }, [weeksInYear]);
+
+  useEffect(() => {
     if (selectedDay) {
       onDayChanged(weeksInYear[selectedDay.weekIndex][selectedDay.dayIndex]);
     }

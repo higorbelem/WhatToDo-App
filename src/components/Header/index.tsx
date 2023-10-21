@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Text, Box, useTheme, Pressable } from 'native-base';
 
 import { formatString } from '#/helpers/date';
@@ -19,7 +19,8 @@ function Header({ onTodayPress }: HeaderProps) {
         <Text color="gray.900" fontWeight={700} marginRight={1}>
           {formatString(new Date())}
         </Text>
-        <MaterialCommunityIcons name="calendar" color={colors.primary[900]} size={20} />
+
+        <Ionicons name="calendar" color={colors.primary[900]} size={20} />
       </Pressable>
     </Box>
   );
