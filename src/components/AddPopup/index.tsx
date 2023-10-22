@@ -46,6 +46,7 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
   useEffect(() => {
     if (!error && data) {
       onClose(true);
+      clearStates();
     }
   }, [error, data]);
 
@@ -61,6 +62,14 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
       );
     })();
   }, [name, selectedReminders, time, selectedPriority]);
+
+  const clearStates = () => {
+    setName(null);
+    setTime(null);
+    setSelectedPriority(null);
+    setSelectedReminders([]);
+    setShowTimeButton(false);
+  };
 
   const onTimeSwitchChange = (event: SwitchChangeEvent) => {
     if (event.nativeEvent.value === false) {
@@ -128,11 +137,17 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
     setName(name);
   };
 
+  const onClosePress = () => {
+    clearStates();
+    onClose();
+  };
+
   return (
-    <Actionsheet isOpen={isOpen} onClose={onClose}>
+    <Actionsheet isOpen={isOpen} onClose={onClosePress}>
       <Actionsheet.Content>
         <Box w="full" padding={3}>
           <Input
+            value={name}
             height={10}
             placeholder="What do you need to do?"
             variant="outline"
@@ -156,7 +171,12 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
                 </Text>
               </Box>
 
-              <Switch size="sm" color={colors.green[900]} onChange={onTimeSwitchChange} />
+              <Switch
+                value={showTimeButton}
+                size="sm"
+                color={colors.green[900]}
+                onChange={onTimeSwitchChange}
+              />
             </Box>
 
             {showTimeButton && (

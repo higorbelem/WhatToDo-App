@@ -1,6 +1,5 @@
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { NativeBaseProvider, View } from 'native-base';
 import { useCallback } from 'react';
 import { ApolloProvider } from '@apollo/client';
@@ -21,7 +20,6 @@ export default function Layout() {
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await setDeviceId();
-      await SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
@@ -35,6 +33,8 @@ export default function Layout() {
         <View flex={1} onLayout={onLayoutRootView}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+            <Stack.Screen name="home" options={{ headerShown: false }} />
           </Stack>
         </View>
       </NativeBaseProvider>

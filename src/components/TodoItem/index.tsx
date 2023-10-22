@@ -1,11 +1,14 @@
+import { useRef, useState } from 'react';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Octicons from '@expo/vector-icons/Octicons';
 import { Box, Pressable, Text, useTheme } from 'native-base';
-import { StyleSheet } from 'react-native';
+import { Animated, Dimensions, StyleSheet } from 'react-native';
 import { SwipeItem, SwipeButtonsContainer } from 'react-native-swipe-item';
 
 import { PriorityType } from '#/@types/todoItem';
 import { priorityColors } from '#/static/priority';
+
+const { width } = Dimensions.get('window');
 
 interface TodoItemProps {
   id: string;
@@ -29,6 +32,42 @@ export default function TodoItem({
   onDeleteTask,
 }: TodoItemProps) {
   const { colors } = useTheme();
+
+  const [checked, setChecked] = useState(false);
+
+  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+  const AnimatedIcon = Animated.createAnimatedComponent(FontAwesome5);
+
+  const animatedCheckColor = useRef(new Animated.Value(0)).current;
+  const translateValue = useRef(new Animated.Value(0)).current;
+  const checkBackColor = animatedCheckColor.interpolate({
+    inputRange: [0, 1],
+    outputRange: [`${colors.yellow[900]}00`, colors.yellow[900]],
+  });
+  const translateAnimation = translateValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, width],
+  });
+
+  const onCheck = () => {
+    setTimeout(() => {
+      Animated.timing(animatedCheckColor, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start(() => {
+        onFinishTask();
+
+        Animated.timing(translateValue, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 0);
+
+    setChecked(true);
+  };
 
   if (finished) {
     return (
@@ -54,61 +93,77 @@ export default function TodoItem({
   const rightButton = (
     <SwipeButtonsContainer style={styles.deleteButton}>
       <Pressable backgroundColor="red.100" padding={3} rounded="full" onPress={onDeleteTask}>
-        <FontAwesome5 name="trash" color={colors.red[900]} size={16} />
+        <AnimatedIcon
+          animation="glow"
+          iterationCount="infinite"
+          name="trash"
+          color={colors.red[900]}
+          size={16}
+        />
       </Pressable>
     </SwipeButtonsContainer>
   );
 
   return (
-    <SwipeItem
-      rightButtons={rightButton}
-      style={styles.button}
-      swipeContainerStyle={styles.swipeContentContainerStyle}>
-      <Box
-        flexDirection="row"
-        alignItems="center"
-        backgroundColor="white"
-        rounded="md"
-        shadow={2}
-        width="100%"
-        height="100%"
-        paddingX={2}>
-        <Pressable
-          rounded="full"
-          borderWidth={1}
-          borderColor="gray.900"
-          padding={1.5}
-          onPress={onFinishTask}>
-          <FontAwesome5 name="check" color={colors.gray[900]} size={15} />
-        </Pressable>
-
-        <Box flex={1} marginLeft={4}>
-          <Text fontSize={16} fontWeight={500}>
-            {title}
-          </Text>
-
-          {!!description && (
-            <Text color="gray.900" fontWeight={500}>
-              {description}
-            </Text>
-          )}
-        </Box>
-
-        <Box flexDirection="row" alignItems="center" marginRight={3}>
-          {priority && (
-            <Box
-              width={2}
-              height={2}
-              rounded="full"
-              backgroundColor={priorityColors[priority].primary}
-              marginRight={3}
+    <Animated.View
+      style={{
+        transform: [{ translateX: translateAnimation }],
+      }}>
+      <SwipeItem
+        rightButtons={rightButton}
+        style={styles.button}
+        swipeContainerStyle={styles.swipeContentContainerStyle}>
+        <Box
+          flexDirection="row"
+          alignItems="center"
+          backgroundColor="white"
+          rounded="md"
+          shadow={2}
+          width="100%"
+          height="100%"
+          paddingX={2}>
+          <AnimatedPressable
+            rounded="full"
+            borderWidth={1}
+            borderColor={checked ? 'transparent' : 'gray.900'}
+            padding={1.5}
+            onPress={onCheck}
+            style={{ backgroundColor: checkBackColor }}>
+            <AnimatedIcon
+              name="check"
+              color={checked ? colors.white : colors.gray[900]}
+              size={15}
             />
-          )}
+          </AnimatedPressable>
 
-          {hasReminders && <Octicons name="bell-fill" color={colors.gray[900]} size={16} />}
+          <Box flex={1} marginLeft={4}>
+            <Text fontSize={16} fontWeight={500}>
+              {title}
+            </Text>
+
+            {!!description && (
+              <Text color="gray.900" fontWeight={500}>
+                {description}
+              </Text>
+            )}
+          </Box>
+
+          <Box flexDirection="row" alignItems="center" marginRight={3}>
+            {priority && (
+              <Box
+                width={2}
+                height={2}
+                rounded="full"
+                backgroundColor={priorityColors[priority].primary}
+                marginRight={3}
+              />
+            )}
+
+            {hasReminders && <Octicons name="bell-fill" color={colors.gray[900]} size={16} />}
+          </Box>
         </Box>
-      </Box>
-    </SwipeItem>
+      </SwipeItem>
+    </Animated.View>
   );
 }
 
