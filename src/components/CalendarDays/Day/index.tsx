@@ -11,7 +11,7 @@ interface DayProps {
 
 function Day({ date, selected, onPress }: DayProps) {
   return (
-    <PressableOpacity flex={1} onPress={onPress}>
+    <PressableOpacity flex={1 / 7} onPress={onPress}>
       {selected && (
         <Box
           position="absolute"

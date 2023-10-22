@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SwitchChangeEvent } from 'react-native/types';
 import * as yup from 'yup';
+import { useMutation } from '@apollo/client';
 
 import Button from '../Button';
 import PriorityItem from '../PriorityItem';
@@ -14,10 +15,14 @@ import ReminderItem from '../ReminderItem';
 
 import { PriorityType, ReminderNameType } from '#/@types/todoItem';
 import { reminders } from '#/static/reminders';
+import { getDeviceId } from '#/services/deviceId';
+import { formatOnlyDate, formatOnlyTime } from '#/helpers/date';
+import { CREATE_TASK } from '#/graphql/queries/task';
 
 interface AddPopupProps {
+  currentDate: Date;
   isOpen?: boolean;
-  onClose?: () => void;
+  onClose?: (hasAdded?: boolean) => void;
 }
 
 const schema = yup.object().shape({
@@ -27,7 +32,7 @@ const schema = yup.object().shape({
   priority: yup.string().optional(),
 });
 
-function AddPopup({ isOpen, onClose }: AddPopupProps) {
+function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
   const [showTimeButton, setShowTimeButton] = useState(false);
   const [time, setTime] = useState<Date>();
   const [name, setName] = useState<string>();
@@ -35,6 +40,14 @@ function AddPopup({ isOpen, onClose }: AddPopupProps) {
   const [selectedPriority, setSelectedPriority] = useState<PriorityType>();
   const [isValid, setIsValid] = useState(false);
   const { colors } = useTheme();
+
+  const [createTask, { loading, error, data }] = useMutation(CREATE_TASK);
+
+  useEffect(() => {
+    if (!error && data) {
+      onClose(true);
+    }
+  }, [error, data]);
 
   useEffect(() => {
     (async () => {
@@ -92,7 +105,22 @@ function AddPopup({ isOpen, onClose }: AddPopupProps) {
         priority: selectedPriority,
       })
     ) {
-      console.log('Do Something');
+      const deviceId = await getDeviceId();
+
+      try {
+        await createTask({
+          variables: {
+            name,
+            date: formatOnlyDate(currentDate),
+            time: time ? formatOnlyTime(time) : null,
+            priority: selectedPriority ?? null,
+            reminders: selectedReminders ?? null,
+            deviceId,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+      }
     }
   };
 

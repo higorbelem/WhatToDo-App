@@ -15,8 +15,11 @@ export type ReminderType = {
 export type PriorityType = 'low' | 'normal' | 'high';
 
 export type TodoType = {
+  id: string;
   name: string;
-  date: Date;
-  priority: PriorityType;
-  reminder: ReminderNameType;
-};
+  date?: Date;
+  time?: string;
+  priority?: PriorityType;
+  reminders?: ReminderNameType[];
+  done?: boolean;
+}

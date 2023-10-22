@@ -3,8 +3,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { NativeBaseProvider, View } from 'native-base';
 import { useCallback } from 'react';
+import { ApolloProvider } from '@apollo/client';
 
 import { theme } from '#/static/theme';
+import { getApolloClient } from '#/graphql/apollo';
+import { setDeviceId } from '#/services/deviceId';
 
 export default function Layout() {
   const [fontsLoaded] = useFonts({
@@ -17,6 +20,7 @@ export default function Layout() {
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
+      await setDeviceId();
       await SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
@@ -26,12 +30,14 @@ export default function Layout() {
   }
 
   return (
-    <NativeBaseProvider theme={theme}>
-      <View flex={1} onLayout={onLayoutRootView}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-        </Stack>
-      </View>
-    </NativeBaseProvider>
+    <ApolloProvider client={getApolloClient()}>
+      <NativeBaseProvider theme={theme}>
+        <View flex={1} onLayout={onLayoutRootView}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+      </NativeBaseProvider>
+    </ApolloProvider>
   );
 }

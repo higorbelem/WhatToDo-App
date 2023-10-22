@@ -1,25 +1,35 @@
+export const MONTHS_INTERVAL = 4;
+
+export const DAY = 1000 * 60 * 60 * 24;
+export const MONTH = DAY * 30;
+
 export const getAllDaysInMonth = (month: number, year: number) =>
   Array.from(
     { length: new Date(year, month, 0).getDate() },
     (_, i) => new Date(year, month - 1, i + 1)
   );
 
-export const getAllDaysInYear = (year: number): string[] => {
-  let res = [];
-  for (let index = 1; index <= 12; index++) {
-    res = [...res, ...getAllDaysInMonth(index, year)];
+
+export const getDays = (startDate: Date, endDate: Date): Date[] => {
+  const res: Date[] = []
+  let currentDate = startDate;
+  
+  while (currentDate.getTime() <= endDate.getTime()) {
+    res.push(currentDate)
+    currentDate = new Date(currentDate.getTime() + DAY)
   }
+
   return res;
 };
 
-export const splitYearInWeeks = (daysInYear: string[]): Date[][] => {
-  const firstWeekDayIndex = daysInYear.findIndex((item) => daysOfTheWeek[new Date(item).getDay()]);
-  daysInYear.splice(0, firstWeekDayIndex - 1);
-
+export const splitInWeeks = (days: Date[]): Date[][] => {
   const weeks = [];
 
-  for (let i = 0; i < daysInYear.length; i += 7) {
-    const week = daysInYear.slice(i, i + 7);
+  const firstWeekDayIndex = days.findIndex((item) => new Date(item).getDay() === 0);
+  weeks.push(days.splice(0, firstWeekDayIndex));
+
+  for (let i = 0; i < days.length; i += 7) {
+    const week = days.slice(i, i + 7);
     weeks.push(week);
   }
 
@@ -49,7 +59,7 @@ export const getDayIndexFromWeeks = (
   }
 };
 
-const isSameDay = (dateA: Date, dateB: Date) => {
+export const isSameDay = (dateA: Date, dateB: Date) => {
   if (
     dateA.getFullYear() === dateB.getFullYear() &&
     dateA.getMonth() === dateB.getMonth() &&
@@ -62,6 +72,14 @@ const isSameDay = (dateA: Date, dateB: Date) => {
 
 export const formatString = (date: Date) => {
   return `${daysOfTheWeekFull[date.getDay()]}, ${MonthsFull[date.getMonth()]} ${date.getDate()}`;
+};
+
+export const formatOnlyDate = (date: Date) => {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate() + 1}`;
+};
+
+export const formatOnlyTime = (date: Date) => {
+  return `${date.getHours()}:${date.getMinutes()}`;
 };
 
 export const daysOfTheWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];

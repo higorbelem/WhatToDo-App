@@ -6,16 +6,24 @@ import Day from './Day';
 import Header from '../Header';
 
 import {
-  getAllDaysInYear,
+  getDays,
   getDayIndexFromWeeks,
   MonthsFull,
-  splitYearInWeeks,
+  splitInWeeks,
+  MONTH,
+  MONTHS_INTERVAL,
+  DAY,
 } from '#/helpers/date';
 
 const { width } = Dimensions.get('window');
 
 interface CalendarDaysProps {
+  initialLimitDates: {
+    startDate: Date;
+    endDate: Date;
+  };
   onDayChanged: (date: Date) => void;
+  onLimitDatesChanged: (startDate: Date, endDate: Date) => void;
 }
 
 type selectedDayType = {
@@ -23,39 +31,83 @@ type selectedDayType = {
   dayIndex: number;
 };
 
-function CalendarDays({ onDayChanged }: CalendarDaysProps) {
-  const [weeksInYear, setWeeksInYear] = useState<Date[][]>([]);
+function CalendarDays({ initialLimitDates, onDayChanged, onLimitDatesChanged }: CalendarDaysProps) {
+  const [weeks, setWeeks] = useState<Date[][]>([]);
+  const [days, setDays] = useState<Date[]>([]);
   const [selectedDay, setSelectedDay] = useState<selectedDayType>();
+  const [startDate, setStartDate] = useState<Date>(initialLimitDates.startDate);
+  const [endDate, setEndDate] = useState<Date>(initialLimitDates.endDate);
   const [currentScrollDateText, setCurrentScrollDateText] = useState(
     `${MonthsFull[new Date().getMonth()]}, ${new Date().getFullYear()}`
   );
+  const [closerToBegining, setCloserToBegining] = useState(true);
+  const [initialScroll, setInitialScroll] = useState(true);
+  const [datesLoading, setDatesLoading] = useState(false);
 
   const dayScrollRef = useRef<any>();
 
   useEffect(() => {
-    const allDaysInYear = getAllDaysInYear(new Date().getFullYear());
+    const allDays = getDays(startDate, endDate);
 
-    setWeeksInYear(splitYearInWeeks(allDaysInYear));
+    setDays(allDays);
   }, []);
 
   useEffect(() => {
-    if (weeksInYear.length) {
+    setWeeks(splitInWeeks(days));
+  }, [days]);
+
+  useEffect(() => {
+    if (weeks.flat().length && initialScroll) {
+      setInitialScroll(false);
       setTimeout(() => {
         onTodayPress();
       }, 500);
     }
-  }, [weeksInYear]);
+  }, [weeks]);
 
   useEffect(() => {
     if (selectedDay) {
-      onDayChanged(weeksInYear[selectedDay.weekIndex][selectedDay.dayIndex]);
+      onDayChanged(weeks[selectedDay.weekIndex][selectedDay.dayIndex]);
     }
   }, [selectedDay]);
 
-  const onTodayPress = () => {
-    const dayIndex = getDayIndexFromWeeks(new Date(), weeksInYear);
+  const onScrollFinished = (isEnd: boolean, event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (datesLoading) return;
 
-    if (dayScrollRef.current?.scrollTo) {
+    setDatesLoading(true);
+    setTimeout(() => {
+      setDatesLoading(false);
+    }, 1000);
+
+    if (!isEnd) {
+      const newStartDate = new Date(startDate.getTime() - MONTH * MONTHS_INTERVAL);
+      setStartDate(newStartDate);
+
+      onLimitDatesChanged(newStartDate, endDate);
+
+      const newDays = getDays(newStartDate, new Date(startDate.getTime() + DAY));
+      setDays((prev) => [...newDays, ...prev]);
+    } else {
+      const newEndDate = new Date(endDate.getTime() + MONTH * MONTHS_INTERVAL);
+      setEndDate(newEndDate);
+
+      onLimitDatesChanged(startDate, newEndDate);
+
+      const newDays = getDays(new Date(endDate.getTime() - DAY), newEndDate);
+      setDays((prev) => [...prev, ...newDays]);
+    }
+
+    dayScrollRef.current.scrollTo({
+      y: 0,
+      x: !isEnd ? 17 * width : event.nativeEvent.contentSize.width + 17 * width,
+      animated: false,
+    });
+  };
+
+  const onTodayPress = () => {
+    const dayIndex = getDayIndexFromWeeks(new Date(), weeks);
+
+    if (dayIndex && dayScrollRef.current?.scrollTo) {
       dayScrollRef.current?.scrollTo({
         x: width * dayIndex.weekIndex,
         animated: true,
@@ -73,8 +125,23 @@ function CalendarDays({ onDayChanged }: CalendarDaysProps) {
   };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (event.nativeEvent.contentOffset.x < event.nativeEvent.contentSize.width / 2) {
+      setCloserToBegining(true);
+    } else {
+      setCloserToBegining(false);
+    }
+
+    if (event.nativeEvent.contentOffset.x === 0) {
+      onScrollFinished(false, event);
+    } else if (
+      event.nativeEvent.contentOffset.x + event.nativeEvent.layoutMeasurement.width ===
+      event.nativeEvent.contentSize.width
+    ) {
+      onScrollFinished(true, event);
+    }
+
     const currentWeekIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-    const day = weeksInYear[currentWeekIndex][0];
+    const day = weeks[currentWeekIndex][0];
 
     setCurrentScrollDateText(`${MonthsFull[day.getMonth()]}, ${day.getFullYear()}`);
   };
@@ -93,10 +160,14 @@ function CalendarDays({ onDayChanged }: CalendarDaysProps) {
         snapToInterval={width}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingVertical: 3 }}
-        scrollEventThrottle={1000}
+        scrollEventThrottle={400}
         onScroll={onScroll}>
-        {weeksInYear.map((week, weekIndex) => (
-          <Box key={`${weekIndex}`} flexDirection="row" width={width}>
+        {weeks.map((week, weekIndex) => (
+          <Box
+            key={`${weekIndex}`}
+            flexDirection="row"
+            justifyContent={closerToBegining ? 'flex-end' : 'flex-start'}
+            width={width}>
             {week.map((day, dayIndex) => (
               <Day
                 key={`${dayIndex}`}

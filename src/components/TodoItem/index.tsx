@@ -8,19 +8,25 @@ import { PriorityType } from '#/@types/todoItem';
 import { priorityColors } from '#/static/priority';
 
 interface TodoItemProps {
+  id: string;
   title: string;
   description?: string;
   hasReminders?: boolean;
   priority?: PriorityType;
   finished?: boolean;
+  onFinishTask: () => void;
+  onDeleteTask: () => void;
 }
 
 export default function TodoItem({
+  id,
   title,
   description,
   hasReminders,
   priority,
   finished,
+  onFinishTask,
+  onDeleteTask,
 }: TodoItemProps) {
   const { colors } = useTheme();
 
@@ -47,7 +53,7 @@ export default function TodoItem({
 
   const rightButton = (
     <SwipeButtonsContainer style={styles.deleteButton}>
-      <Pressable backgroundColor="red.100" padding={3} rounded="full">
+      <Pressable backgroundColor="red.100" padding={3} rounded="full" onPress={onDeleteTask}>
         <FontAwesome5 name="trash" color={colors.red[900]} size={16} />
       </Pressable>
     </SwipeButtonsContainer>
@@ -67,7 +73,12 @@ export default function TodoItem({
         width="100%"
         height="100%"
         paddingX={2}>
-        <Pressable rounded="full" borderWidth={1} borderColor="gray.900" padding={1.5}>
+        <Pressable
+          rounded="full"
+          borderWidth={1}
+          borderColor="gray.900"
+          padding={1.5}
+          onPress={onFinishTask}>
           <FontAwesome5 name="check" color={colors.gray[900]} size={15} />
         </Pressable>
 
