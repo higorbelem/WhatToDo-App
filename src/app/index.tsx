@@ -1,6 +1,7 @@
 import { Platform } from 'expo-modules-core';
-import { Box, Pressable, ScrollView, Text } from 'native-base';
+import { Box, Image, Pressable, ScrollView, Text } from 'native-base';
 import { useEffect, useState } from 'react';
+import { Dimensions } from 'react-native';
 import { SwipeProvider } from 'react-native-swipe-item';
 
 import AddPopup from '#/components/AddPopup';
@@ -14,6 +15,8 @@ import { TodoType } from '#/@types/todoItem';
 
 const initialStartDate = new Date(Date.now() - MONTH * MONTHS_INTERVAL);
 const initialEndDate = new Date(Date.now() + MONTH * MONTHS_INTERVAL);
+
+const { width } = Dimensions.get('window');
 
 function Home() {
   const [showAddPopup, setShowAddPopup] = useState(false);
@@ -137,25 +140,43 @@ function Home() {
           }}
         />
 
-        <ScrollView>
-          <SwipeProvider>
-            <Box padding={5}>
-              {currentTasks.map((item) => (
-                <TodoItem
-                  key={item.id}
-                  id={item.id}
-                  title={item.name}
-                  description={item.time}
-                  priority={item.priority}
-                  hasReminders={!!item.reminders.length}
-                  finished={item.done}
-                  onDeleteTask={() => onDeleteTask(item)}
-                  onFinishTask={() => onFinishTask(item)}
-                />
-              ))}
-            </Box>
-          </SwipeProvider>
-        </ScrollView>
+        {currentTasks.length ? (
+          <ScrollView>
+            <SwipeProvider>
+              <Box padding={5}>
+                {currentTasks.map((item) => (
+                  <TodoItem
+                    key={item.id}
+                    id={item.id}
+                    title={item.name}
+                    description={item.time}
+                    priority={item.priority}
+                    hasReminders={!!item.reminders.length}
+                    finished={item.done}
+                    onDeleteTask={() => onDeleteTask(item)}
+                    onFinishTask={() => onFinishTask(item)}
+                  />
+                ))}
+              </Box>
+            </SwipeProvider>
+          </ScrollView>
+        ) : (
+          <Box flex={1} width="full" flexDirection="column" alignItems="center" paddingTop="50px">
+            <Image
+              source={require('#/assets/imgs/onboarding-3.png')}
+              height={width * 0.5}
+              width={width * 0.5}
+              alt="Todo image"
+            />
+
+            <Text fontSize={20} fontWeight={700} marginTop={8}>
+              You have no tasks
+            </Text>
+            <Text fontSize={16} fontWeight={500}>
+              Write something below
+            </Text>
+          </Box>
+        )}
 
         <Pressable
           position="absolute"
