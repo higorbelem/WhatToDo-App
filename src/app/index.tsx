@@ -20,6 +20,8 @@ function Home() {
   const [tasks, setTasks] = useState<TodoType[]>([]);
   const [currentTasks, setCurrentTasks] = useState<TodoType[]>([]);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date>(initialStartDate);
+  const [endDate, setEndDate] = useState<Date>(initialEndDate);
 
   const [getTasks, { loading, refetch, error, data, called }] = useLazyQuery(GET_TASKS);
   const [finishTask, { loading: loadingFinishTask, error: errorFinishTask, data: dataFinishTask }] =
@@ -29,13 +31,13 @@ function Home() {
 
   useEffect(() => {
     if (!errorFinishTask && dataFinishTask) {
-      fetchTasks(initialStartDate, initialEndDate);
+      fetchTasks(startDate, endDate);
     }
   }, [errorFinishTask, dataFinishTask]);
 
   useEffect(() => {
     if (!errorDeleteTask && dataDeleteTask) {
-      fetchTasks(initialStartDate, initialEndDate);
+      fetchTasks(startDate, endDate);
     }
   }, [errorDeleteTask, dataDeleteTask]);
 
@@ -44,13 +46,15 @@ function Home() {
       setTasks(data.tasks as TodoType[]);
 
       setCurrentTasks(
-        (data.tasks as TodoType[]).filter((item) => isSameDay(new Date(item.date), currentDate))
+        (data.tasks as TodoType[])
+          .filter((item) => isSameDay(new Date(item.date), currentDate))
+          .sort((a, b) => Number(a.done) - Number(b.done))
       );
     }
   }, [error, data]);
 
   useEffect(() => {
-    fetchTasks(initialStartDate, initialEndDate);
+    fetchTasks(startDate, endDate);
   }, []);
 
   const fetchTasks = async (startDate: Date, endDate: Date) => {
@@ -75,7 +79,11 @@ function Home() {
 
   const onDayChanged = (date: Date) => {
     setCurrentDate(date);
-    setCurrentTasks((tasks as TodoType[]).filter((item) => isSameDay(new Date(item.date), date)));
+    setCurrentTasks(
+      (tasks as TodoType[])
+        .filter((item) => isSameDay(new Date(item.date), date))
+        .sort((a, b) => Number(a.done) - Number(b.done))
+    );
   };
 
   const onAddTaskPressed = () => {
@@ -84,11 +92,14 @@ function Home() {
 
   const onLimitDatesChanged = (startDate: Date, endDate: Date) => {
     fetchTasks(startDate, endDate);
+
+    setStartDate(startDate);
+    setEndDate(endDate);
   };
 
   const onAddPopupClse = (hasAdded: boolean) => {
     if (hasAdded) {
-      fetchTasks(initialStartDate, initialEndDate);
+      fetchTasks(startDate, endDate);
     }
 
     setShowAddPopup(false);
