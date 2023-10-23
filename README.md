@@ -12,9 +12,9 @@
 	```
 
 *   Add the .env file to the root of the project, and set the database info on it. Example:
-	  ```
-	  EXPO_PUBLIC_GRAPHQL_URL=http://localhost:4000/graphql
-	  ```
+	```
+	EXPO_PUBLIC_GRAPHQL_URL=http://YOUR-IP-ADDRESS:4000/graphql
+	```
     
 * Run the project
 	```

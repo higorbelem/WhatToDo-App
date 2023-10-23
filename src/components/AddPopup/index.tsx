@@ -64,9 +64,9 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
   }, [name, selectedReminders, time, selectedPriority]);
 
   const clearStates = () => {
-    setName(null);
-    setTime(null);
-    setSelectedPriority(null);
+    setName(undefined);
+    setTime(undefined);
+    setSelectedPriority(undefined);
     setSelectedReminders([]);
     setShowTimeButton(false);
   };
@@ -158,6 +158,7 @@ function AddPopup({ currentDate, isOpen, onClose }: AddPopupProps) {
             color="gray.900"
             fontWeight={600}
             onChangeText={onNameChange}
+            autoFocus={false}
           />
 
           <Box marginTop={4}>
